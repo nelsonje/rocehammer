@@ -1,0 +1,113 @@
+# don't clean custom targets in this directory
+SET_DIRECTORY_PROPERTIES(PROPERTIES CLEAN_NO_CUSTOM 1)
+
+###########################################
+# External projects
+###########################################
+set(EXTERN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/build")
+set(EXTERN_STAMP_DIR "${EXTERN_BUILD_DIR}/stamps")
+
+message("-- Using {${BASE_C_COMPILER},${BASE_CXX_COMPILER}} to build third-party dependencies (if needed).")
+
+
+if(APPLE)
+  # set(APPLE_CXXFLAGS CXXFLAGS=-stdlib=libstdc++)
+endif()
+
+
+
+
+
+
+
+find_library(THIRD_PARTY_GFLAGS "gflags" "${THIRD_PARTY_ROOT}/lib")
+if( NOT THIRD_PARTY_GFLAGS )
+  message("     gflags: <building>")
+  ExternalProject_Add( third-party-gflags
+    URL                "https://github.com/schuhschuh/gflags/archive/v2.1.1.tar.gz"
+    SOURCE_DIR         ${EXTERN_BUILD_DIR}/src/gflags-2.1.1
+    PREFIX             ${EXTERN_BUILD_DIR}/gflags
+    STAMP_DIR          ${EXTERN_STAMP_DIR}/gflags
+    BINARY_DIR         ${EXTERN_BUILD_DIR}/gflags
+    INSTALL_DIR        ${THIRD_PARTY_ROOT}
+    CONFIGURE_COMMAND
+      CC=${BASE_C_COMPILER} CXX=${BASE_CXX_COMPILER} CFLAGS=-g ${APPLE_CXXFLAGS} <SOURCE_DIR>/configure --prefix=<INSTALL_DIR>
+    BUILD_COMMAND      make -j
+    INSTALL_COMMAND    make install
+  )
+  list(APPEND tool_list third-party-gflags)
+else()
+  message("     gflags: ${THIRD_PARTY_GFLAGS}")
+endif()
+
+
+
+
+
+find_library(THIRD_PARTY_GLOG "glog" "${THIRD_PARTY_ROOT}/lib")
+if( NOT THIRD_PARTY_GLOG )
+
+  message("     glog:   <building>")
+  ExternalProject_Add( third-party-glog
+    URL                http://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
+    # URL_HASH           SHA1=ed40c26ecffc5ad47c618684415799ebaaa30d65
+    SOURCE_DIR         ${EXTERN_BUILD_DIR}/src/glog-0.3.3
+    PREFIX             ${EXTERN_BUILD_DIR}/glog
+    STAMP_DIR          ${EXTERN_STAMP_DIR}/glog
+    BINARY_DIR         ${EXTERN_BUILD_DIR}/glog
+    INSTALL_DIR        ${THIRD_PARTY_ROOT}
+    CONFIGURE_COMMAND
+    CC=${BASE_C_COMPILER} CXX=${BASE_CXX_COMPILER} CFLAGS=-g ${APPLE_CXXFLAGS} <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> CFLAGS=-I${THIRD_PARTY_ROOT}/include LDFLAGS=-L${THIRD_PARTY_ROOT}/lib
+    BUILD_COMMAND      make -j
+    INSTALL_COMMAND    make install
+    DEPENDS third-party-gflags
+  )
+  list(APPEND tool_list third-party-glog)
+else()
+  message("     glog:   ${THIRD_PARTY_GLOG}")
+endif()
+
+
+
+
+
+find_library(THIRD_PARTY_LIBCRAFTER "profiler" "${THIRD_PARTY_ROOT}/lib")
+if( NOT THIRD_PARTY_LIBCRAFTER )
+
+  message("     libcrafter: <building>")
+  ExternalProject_Add( third-party-libcrafter
+    URL                http://libcrafter.googlecode.com/files/crafter-0.2.tar.gz
+    SOURCE_DIR         ${EXTERN_BUILD_DIR}/src/crafter-0.2
+    PREFIX             ${EXTERN_BUILD_DIR}/libcrafter
+    STAMP_DIR          ${EXTERN_STAMP_DIR}/libcrafter
+    BINARY_DIR         ${EXTERN_BUILD_DIR}/libcrafter
+    INSTALL_DIR        ${THIRD_PARTY_ROOT}
+    CONFIGURE_COMMAND  
+      CC=${BASE_C_COMPILER} CXX=${BASE_CXX_COMPILER} CFLAGS=-g <SOURCE_DIR>/configure --prefix=<INSTALL_DIR>
+    BUILD_COMMAND      make -j
+    INSTALL_COMMAND    make install
+  )
+  list(APPEND tool_list third-party-libcrafter)
+else()
+  message("     libcrafter: ${THIRD_PARTY_LIBCRAFTER}")
+endif()
+
+
+
+
+
+
+
+
+# set(third-party-targets  third-party-gasnet third-party-gflags third-party-glog third-party-libcrafter )
+add_custom_target(all-third-party DEPENDS ${tool_list} )
+set_property(TARGET all-third-party PROPERTY FOLDER "Third Party")
+
+foreach(tool_target ${tool_list})
+  set_property(TARGET ${tool_target} PROPERTY FOLDER "Third Party")
+endforeach()
+
+add_custom_target(clean-third-party
+  rm -rf ${THIRD_PARTY_ROOT}
+)
+set_property(TARGET clean-third-party PROPERTY FOLDER "Third Party")
