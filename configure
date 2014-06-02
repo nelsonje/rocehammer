@@ -133,11 +133,23 @@ configure() {
             pwd
             
             # pass cmake the args we constructed, along with leftovers from original command line
-            #echo cmake "${ROOT_DIR}" "${GEN_FLAG}" ${COMPILER_FLAGS} "${THIRD_PARTY_FLAG}" #"${MODE_FLAG}" ${LEFTOVER}
-            #cmake "${ROOT_DIR}" "${GEN_FLAG}" "${COMPILER_FLAG}" "${THIRD_PARTY_FLAG}" "${MODE_FLAG}" ${LEFTOVER}
-            #cmake "${ROOT_DIR}" "${GEN_FLAG}" ${COMPILER_FLAGS} "${THIRD_PARTY_FLAG}" #"${MODE_FLAG}" ${LEFTOVER}
             echo "${COMMAND} ${GEN_FLAG}" ${LEFTOVER}
-            ${COMMAND} "${GEN_FLAG}" ${LEFTOVER}
+            if ${COMMAND} "${GEN_FLAG}" ${LEFTOVER}; then
+               echo "-------------------------------------"
+               echo "created ${BUILD_DIR}; to build:"
+               case "${GENERATOR}" in
+                   Make)
+                       echo "> cd ${BUILD_DIR}; make -j"
+                       ;;
+                   Ninja)
+                       echo "> cd ${BUILD_DIR}; ninja"
+                       ;;
+                   Xcode)
+                       echo "> cd ${BUILD_DIR}; xcodebuild"
+                       ;;
+               esac
+               echo "-------------------------------------"
+            fi
 }
 
 # iterate over generator and mode settings, calling configure for each
