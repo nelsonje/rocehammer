@@ -71,7 +71,7 @@ endif()
 
 
 
-find_library(THIRD_PARTY_LIBCRAFTER "profiler" "${THIRD_PARTY_ROOT}/lib")
+find_library(THIRD_PARTY_LIBCRAFTER "crafter" "${THIRD_PARTY_ROOT}/lib")
 if( NOT THIRD_PARTY_LIBCRAFTER )
 
   message("     libcrafter: <building>")
