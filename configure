@@ -69,31 +69,32 @@ if [[ -z "${MY_CC}" || -z "${MY_CXX}" ]]; then
    echo "Using C compiler ${MY_CC} and C++ compiler ${MY_CXX}."
 fi
 
-
+# function to generate one configuration.
+# called below for each (generator, mode) pair
 configure() {
             # configure function args
             GENERATOR="$1"
             MODE="$2"
             LEFTOVER="$3"
 
-            # base command string
-            COMMAND="cmake $(pwd)"
-
             # set generator
             case "${GENERATOR}" in
                  Make)
-                        COMMAND+=" -G\"Unix Makefiles\""
+                        GEN_FLAG="-GUnix Makefiles"
                         ;;
                  Xcode)
                         echo "Note: '--mode' not supported for Xcode, ignoring..."
                         MODE=""
-                        COMMAND+=" -GXcode"
+                        GEN_FLAG="-GXcode"
                         ;;
                  *)
-                        COMMAND+=" -G\"${GENERATOR}\""
+                        GEN_FLAG="-G${GENERATOR}"
                         ;;
             esac     
 
+            # start command string
+            COMMAND="cmake $(pwd)"
+            
             # set C and C++ compilers
             COMMAND+=" -DCMAKE_C_COMPILER=${MY_CC}"
             COMMAND+=" -DCMAKE_CXX_COMPILER=${MY_CXX}"
@@ -125,11 +126,18 @@ configure() {
             fi
             
             # create build directory
-            #mkdir -p "${BUILD_DIR}"
-            #cd "${BUILD_DIR}"
-
+            pwd
+            ROOT_DIR="$(pwd)"
+            mkdir -p "${BUILD_DIR}"
+            cd "${BUILD_DIR}"
+            pwd
+            
             # pass cmake the args we constructed, along with leftovers from original command line
-            echo "cd ${BUILD_DIR} && ${COMMAND} ${LEFTOVER}"
+            #echo cmake "${ROOT_DIR}" "${GEN_FLAG}" ${COMPILER_FLAGS} "${THIRD_PARTY_FLAG}" #"${MODE_FLAG}" ${LEFTOVER}
+            #cmake "${ROOT_DIR}" "${GEN_FLAG}" "${COMPILER_FLAG}" "${THIRD_PARTY_FLAG}" "${MODE_FLAG}" ${LEFTOVER}
+            #cmake "${ROOT_DIR}" "${GEN_FLAG}" ${COMPILER_FLAGS} "${THIRD_PARTY_FLAG}" #"${MODE_FLAG}" ${LEFTOVER}
+            echo "${COMMAND} ${GEN_FLAG}" ${LEFTOVER}
+            ${COMMAND} "${GEN_FLAG}" ${LEFTOVER}
 }
 
 # iterate over generator and mode settings, calling configure for each
