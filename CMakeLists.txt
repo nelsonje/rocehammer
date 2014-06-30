@@ -12,8 +12,8 @@ project(Rocehammer)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
 
-set(CMAKE_C_FLAGS_DEBUG "-O1 -DDEBUG -g -DGUARD_PAGES_ON_STACK")
-set(CMAKE_CXX_FLAGS_DEBUG "-O1 -DDEBUG -g -DGUARD_PAGES_ON_STACK")
+set(CMAKE_C_FLAGS_DEBUG "-O1 -DDEBUG -g")
+set(CMAKE_CXX_FLAGS_DEBUG "-O1 -DDEBUG -g")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 #enable_testing()
@@ -66,14 +66,16 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:${THIRD_PARTY_ROOT}/lib")
 
 # TODO: actually check if PMI is available for this platform, possibly build it
 if(NOT APPLE)
-  list(APPEND GRAPPA_LIBS pmi)
+  list(APPEND ROCEHAMMER_LIBS pmi)
 endif()
 
 
-
+find_library(VERBS_LIB
+  NAMES ibverbs
+  HINTS "/usr/lib64")
 
 if(NOT APPLE)
-  list(APPEND GRAPPA_LIBS pthread rt)
+  list(APPEND ROCEHAMMER_LIBS pthread rt)
 endif()
 
 # MPI (mostly for booting, but we also use MPI communication in some places now)
@@ -81,32 +83,26 @@ find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
 
 
-macro(add_grappa_exe target exe )
+macro(add_rocehammer_exe target exe )
   add_executable(${target} EXCLUDE_FROM_ALL ${ARGN})
   set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_NAME "${exe}")
   target_link_libraries(${target} 
-    Grappa
-    graph500-generator
+    Rocehammer
     ${MPI_CXX_LIBRARIES}
-    ${Boost_LIBRARIES}
+#    ${Boost_LIBRARIES}
   )
-endmacro(add_grappa_exe)
+endmacro(add_rocehammer_exe)
 
-macro(add_grappa_application name)
-  add_grappa_exe(${name} ${name} ${ARGN})
+macro(add_rocehammer_application name)
+  add_rocehammer_exe(${name} ${name} ${ARGN})
   set_property(TARGET ${name} PROPERTY FOLDER "Applications") # For organization in Xcode project
-endmacro(add_grappa_application)
+endmacro(add_rocehammer_application)
 
 
-## put Grappa system directory on include path for everything following this
-#include_directories(system)
-#include_directories(system/tasks)
+## put RoCEhammer src directory on include path for everything following this
+include_directories(src)
 
 ####################################
 # subdirectories
 add_subdirectory(third-party)
-#add_subdirectory(system)
-#add_subdirectory(applications)
-#add_subdirectory(bin)
-#add_subdirectory(scratch)
-#add_subdirectory(doc)
+add_subdirectory(src)
